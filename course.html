@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Course Registration</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+        }
+        fieldset {
+            margin-bottom: 15px;
+        }
+        input, select {
+            margin: 6px 0;
+            padding: 8px;
+            width: 100%;
+        }
+        .inline {
+            width: auto;
+        }
+        button {
+            padding: 10px;
+            margin-right: 10px;
+        }
+        #timingBlock {
+            display: none;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h2>Student Course Registration</h2>
+
+    <form id="regForm">
+
+        <!-- Name -->
+        <label>Student Name</label>
+        <input type="text" id="name" placeholder="Enter your name" required>
+
+        <!-- Courses -->
+        <fieldset>
+            <legend>Choose Courses (with credits)</legend>
+
+            <label><input type="checkbox" class="course inline" value="3"> Data Structures (3)</label><br>
+            <label><input type="checkbox" class="course inline" value="4"> Operating Systems (4)</label><br>
+            <label><input type="checkbox" class="course inline" value="2"> Mathematics (2)</label><br>
+            <label><input type="checkbox" class="course inline" value="3"> Database Systems (3)</label>
+
+        </fieldset>
+
+        <!-- Total -->
+        <h3>Total Credits: <span id="credits">0</span></h3>
+
+        <!-- Semester -->
+        <fieldset>
+            <legend>Semester</legend>
+            <label><input type="radio" name="sem" value="Fall" class="inline"> Fall</label>
+            <label><input type="radio" name="sem" value="Winter" class="inline"> Winter</label>
+            <label><input type="radio" name="sem" value="Spring" class="inline"> Spring</label>
+        </fieldset>
+
+        <!-- Timing (ONLY for Fall) -->
+        <div id="timingBlock">
+            <label>Preferred Class Timing (for Fall)</label>
+            <select id="timing">
+                <option value="">Select timing</option>
+                <option>Morning (8–11 AM)</option>
+                <option>Afternoon (12–3 PM)</option>
+                <option>Evening (4–7 PM)</option>
+            </select>
+        </div>
+
+        <!-- Buttons -->
+        <button type="submit">Submit</button>
+        <button type="button" id="resetBtn">Reset</button>
+
+        <p id="message"></p>
+
+    </form>
+</div>
+
+<script>
+    const courses = document.querySelectorAll('.course');
+    const creditsDisplay = document.getElementById('credits');
+    const semRadios = document.querySelectorAll('input[name="sem"]');
+    const timingBlock = document.getElementById('timingBlock');
+    const timing = document.getElementById('timing');
+    const message = document.getElementById('message');
+
+    // Calculate credits
+    function calculateCredits() {
+        let total = 0;
+        courses.forEach(c => {
+            if (c.checked) {
+                total += parseInt(c.value);
+            }
+        });
+        creditsDisplay.innerText = total;
+    }
+
+    courses.forEach(c => {
+        c.addEventListener('change', calculateCredits);
+    });
+
+    // Show timing only for Fall
+    semRadios.forEach(r => {
+        r.addEventListener('change', () => {
+            if (r.value === 'Fall' && r.checked) {
+                timingBlock.style.display = 'block';
+            } else if (r.checked) {
+                timingBlock.style.display = 'none';
+                timing.value = '';
+            }
+        });
+    });
+
+    // Submit
+    document.getElementById('regForm').addEventListener('submit', function(e){
+        e.preventDefault();
+
+        message.innerText = '';
+        message.className = '';
+
+        const name = document.getElementById('name').value.trim();
+        const totalCredits = parseInt(creditsDisplay.innerText);
+        const sem = document.querySelector('input[name="sem"]:checked');
+
+        // Name validation
+        if (!/^[A-Za-z ]{3,}$/.test(name)) {
+            message.innerText = "Invalid name (min 3 letters)";
+            message.className = "error";
+            return;
+        }
+
+        // Course validation
+        if (totalCredits === 0) {
+            message.innerText = "Select at least one course";
+            message.className = "error";
+            return;
+        }
+
+        // Semester validation
+        if (!sem) {
+            message.innerText = "Select a semester";
+            message.className = "error";
+            return;
+        }
+
+        // Timing validation (Fall only)
+        if (sem.value === 'Fall' && !timing.value) {
+            message.innerText = "Select timing for Fall";
+            message.className = "error";
+            return;
+        }
+
+        const data = {
+            name,
+            totalCredits,
+            semester: sem.value,
+            timing: sem.value === 'Fall' ? timing.value : null
+        };
+
+        // AJAX
+        fetch('https://jsonplaceholder.typicode.com/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(() => {
+            message.innerText = "Registration Successful! Total Credits: " + totalCredits;
+            message.className = "success";
+        })
+        .catch(() => {
+            message.innerText = "Registration Failed!";
+            message.className = "error";
+        });
+
+    });
+
+    // Reset
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        document.getElementById('regForm').reset();
+        creditsDisplay.innerText = 0;
+        timingBlock.style.display = 'none';
+        message.innerText = '';
+    });
+
+</script>
+
+</body>
+</html>
