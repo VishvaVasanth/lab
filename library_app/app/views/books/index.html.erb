@@ -1,0 +1,48 @@
+<h1>Books List</h1>
+
+<%= link_to "Add New Book", new_book_path %>
+
+<table border="1">
+  <tr>
+    <th>Title</th>
+    <th>Author</th>
+    <th>Available</th>
+    <th>Actions</th>
+    <th>Borrow</th>
+  </tr>
+
+  <% @books.each do |book| %>
+    <tr>
+      <td><%= book.title %></td>
+      <td><%= book.author %></td>
+      <td><%= book.available ? "Yes" : "No" %></td>
+
+      <td>
+        <%= link_to "Edit", edit_book_path(book) %> |
+        <%= button_to "Delete", book_path(book), method: :delete %>
+      </td>
+
+      <!-- ✅ BORROW FEATURE -->
+      <td>
+        <% if book.available %>
+
+          <%= form_with url: borrowings_path, method: :post do %>
+
+            <%= hidden_field_tag :book_id, book.id %>
+
+            <%= select_tag :borrower_id,
+              options_from_collection_for_select(Borrower.all, :id, :name),
+              prompt: "Select Borrower" %>
+
+            <%= submit_tag "Borrow" %>
+
+          <% end %>
+
+        <% else %>
+          Not Available
+        <% end %>
+      </td>
+
+    </tr>
+  <% end %>
+</table>

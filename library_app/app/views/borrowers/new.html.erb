@@ -1,0 +1,8 @@
+<h1>Add Borrower</h1>
+
+<%= form_with model: @borrower do |f| %>
+  Name: <%= f.text_field :name %><br>
+  Email: <%= f.text_field :email %><br>
+
+  <%= f.submit "Create Borrower" %>
+<% end %>

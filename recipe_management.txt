@@ -1,4 +1,4 @@
-RECIPE MANAGEMENT SYSTEM (RAILS MVC)
+RECIPE MANAGEMENT SYSTEM (FULL MVC + DELETE INCLUDED)
 
 -----------------------------------------
 STEP 1: CREATE PROJECT
@@ -16,19 +16,19 @@ rails generate model Comment title:string user:references recipe:references
 rails db:migrate
 
 -----------------------------------------
-STEP 3: DEFINE ASSOCIATIONS (MODELS)
+STEP 3: MODELS (ASSOCIATIONS)
 -----------------------------------------
 
 # app/models/user.rb
 class User < ApplicationRecord
-  has_many :recipes
-  has_many :comments
+  has_many :recipes, dependent: :destroy
+  has_many :comments, dependent: :destroy
 end
 
 # app/models/recipe.rb
 class Recipe < ApplicationRecord
   belongs_to :user
-  has_many :comments
+  has_many :comments, dependent: :destroy
 end
 
 # app/models/comment.rb
@@ -38,15 +38,10 @@ class Comment < ApplicationRecord
 end
 
 -----------------------------------------
-STEP 4: GENERATE CONTROLLERS
+STEP 4: CONTROLLERS
 -----------------------------------------
-rails generate controller Users
-rails generate controller Recipes
-rails generate controller Comments
 
------------------------------------------
-STEP 5: USERS CONTROLLER (CRUD)
------------------------------------------
+# USERS CONTROLLER
 class UsersController < ApplicationController
 
   def index
@@ -82,8 +77,8 @@ class UsersController < ApplicationController
 end
 
 -----------------------------------------
-STEP 6: RECIPES CONTROLLER (CRUD)
------------------------------------------
+
+# RECIPES CONTROLLER
 class RecipesController < ApplicationController
 
   def index
@@ -92,7 +87,7 @@ class RecipesController < ApplicationController
 
   def show
     @recipe = Recipe.find(params[:id])
-    @comments = @recipe.comments
+    @comment = Comment.new
   end
 
   def new
@@ -124,27 +119,27 @@ class RecipesController < ApplicationController
 end
 
 -----------------------------------------
-STEP 7: COMMENTS CONTROLLER (CRUD)
------------------------------------------
+
+# COMMENTS CONTROLLER
 class CommentsController < ApplicationController
 
   def create
-    comment = Comment.new(params.require(:comment).permit(:title, :user_id, :recipe_id))
-    comment.save
-    redirect_to recipe_path(comment.recipe_id)
+    @comment = Comment.new(params.require(:comment).permit(:title, :user_id, :recipe_id))
+    @comment.save
+    redirect_to recipe_path(@comment.recipe_id)
   end
 
   def destroy
-    comment = Comment.find(params[:id])
-    recipe_id = comment.recipe_id
-    comment.destroy
+    @comment = Comment.find(params[:id])
+    recipe_id = @comment.recipe_id
+    @comment.destroy
     redirect_to recipe_path(recipe_id)
   end
 
 end
 
 -----------------------------------------
-STEP 8: ROUTES
+STEP 5: ROUTES
 -----------------------------------------
 Rails.application.routes.draw do
   resources :users
@@ -154,7 +149,24 @@ Rails.application.routes.draw do
 end
 
 -----------------------------------------
-STEP 9: VIEWS (IMPORTANT PART)
+STEP 6: VIEWS
+-----------------------------------------
+
+# app/views/recipes/index.html.erb
+
+<h1>Recipes</h1>
+
+<%= link_to "Add Recipe", new_recipe_path %>
+
+<% @recipes.each do |recipe| %>
+  <p>
+    <%= recipe.title %>
+    <%= link_to "Show", recipe_path(recipe) %>
+    <%= link_to "Edit", edit_recipe_path(recipe) %>
+    <%= link_to "Delete", recipe_path(recipe), method: :delete %>
+  </p>
+<% end %>
+
 -----------------------------------------
 
 # app/views/recipes/show.html.erb
@@ -164,36 +176,86 @@ STEP 9: VIEWS (IMPORTANT PART)
 
 <h3>Comments</h3>
 
-<% @comments.each do |comment| %>
+<% @recipe.comments.each do |comment| %>
   <p>
     <strong><%= comment.user.name %>:</strong>
     <%= comment.title %>
+    <%= link_to "Delete", comment_path(comment), method: :delete %>
+  </p>
+<% end %>
+
+<h3>Add Comment</h3>
+
+<%= form_with model: @comment do |f| %>
+  <%= f.text_field :title %>
+  <%= f.number_field :user_id %>
+  <%= f.hidden_field :recipe_id, value: @recipe.id %>
+  <%= f.submit "Add Comment" %>
+<% end %>
+
+-----------------------------------------
+
+# app/views/users/index.html.erb
+
+<h1>Users</h1>
+
+<%= link_to "Add User", new_user_path %>
+
+<% @users.each do |user| %>
+  <p>
+    <%= user.name %>
+    <%= link_to "Edit", edit_user_path(user) %>
+    <%= link_to "Delete", user_path(user), method: :delete %>
   </p>
 <% end %>
 
 -----------------------------------------
-FUNCTIONALITY
------------------------------------------
-- User can create recipes
-- User can comment on recipes
-- Each recipe shows its comments
-- Each comment shows user who posted it
-- Full CRUD for Users, Recipes, Comments
+
+# app/views/users/new.html.erb
+
+<%= form_with model: @user do |f| %>
+  <%= f.text_field :name %>
+  <%= f.text_field :email %>
+  <%= f.submit %>
+<% end %>
 
 -----------------------------------------
-ASSOCIATION SUMMARY
+
+# app/views/recipes/new.html.erb
+
+<%= form_with model: @recipe do |f| %>
+  <%= f.text_field :title %>
+  <%= f.text_area :ingredients %>
+  <%= f.number_field :user_id %>
+  <%= f.submit %>
+<% end %>
+
 -----------------------------------------
-User → has many Recipes
-User → has many Comments
-Recipe → belongs to User
-Recipe → has many Comments
-Comment → belongs to User
-Comment → belongs to Recipe
+STEP 7: RUN
+-----------------------------------------
+rails server
+
+Open:
+http://localhost:3000/
+
+-----------------------------------------
+FUNCTIONALITY
+-----------------------------------------
+✔ Create User
+✔ Create Recipe
+✔ Add Comment
+✔ View Comments with User Name
+✔ Edit everything
+✔ DELETE:
+   - Delete User
+   - Delete Recipe
+   - Delete Comment
+✔ Associations working
 
 -----------------------------------------
 VIVA ANSWER
 -----------------------------------------
-This application follows MVC architecture.
-Models define relationships between User, Recipe, and Comment.
-Controllers handle CRUD operations.
-Views display recipes along with comments and user details.
+This application uses MVC architecture.
+Users can create recipes and comments.
+Recipes display comments along with user details.
+Full CRUD operations including delete are implemented for all models.

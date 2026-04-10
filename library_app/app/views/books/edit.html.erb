@@ -1,0 +1,9 @@
+<h1>Edit Book</h1>
+
+<%= form_with model: @book do |f| %>
+  Title: <%= f.text_field :title %><br>
+  Author: <%= f.text_field :author %><br>
+  Available: <%= f.check_box :available %><br>
+
+  <%= f.submit "Update Book" %>
+<% end %>
