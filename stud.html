@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Course Registration</title>
+
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+  <style>
+    body { font-family: Arial; margin: 30px; }
+    .box { width: 450px; border: 1px solid #ccc; padding: 20px; }
+    .error { color: red; }
+    #total { color: green; font-weight: bold; }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Student Course Registration</h2>
+
+  <!-- Name -->
+  Name:<br>
+  <input type="text" id="name"><br>
+  <span id="nameError" class="error"></span>
+
+  <br>
+
+  <!-- Courses -->
+  <h3>Select Courses</h3>
+  <input type="checkbox" class="course" value="3"> Math (3 credits)<br>
+  <input type="checkbox" class="course" value="4"> Physics (4 credits)<br>
+  <input type="checkbox" class="course" value="2"> Chemistry (2 credits)<br>
+  <input type="checkbox" class="course" value="3"> Computer Science (3 credits)<br>
+
+  <br>
+  Total Credits: <span id="total">0</span>
+
+  <br><br>
+
+  <!-- Semester -->
+  <h3>Semester</h3>
+  <input type="radio" name="sem" value="Fall"> Fall
+  <input type="radio" name="sem" value="Winter"> Winter
+  <input type="radio" name="sem" value="Spring"> Spring
+
+  <br><br>
+
+  <!-- Timing (only for Fall) -->
+  <div id="timingBox" style="display:none;">
+    Preferred Class Timing:<br>
+    <select id="timing">
+      <option value="">Select Timing</option>
+      <option>Morning</option>
+      <option>Afternoon</option>
+      <option>Evening</option>
+    </select>
+    <br><span id="timingError" class="error"></span>
+  </div>
+
+  <br>
+
+  <!-- Buttons -->
+  <button id="submitBtn">Submit</button>
+  <button id="resetBtn">Reset</button>
+
+  <br><br>
+
+  <div id="response"></div>
+</div>
+
+<script>
+$(document).ready(function(){
+
+  // 🔥 Calculate total credits
+  $(".course").change(function(){
+    let total = 0;
+
+    $(".course:checked").each(function(){
+      total += parseInt($(this).val());
+    });
+
+    $("#total").text(total);
+  });
+
+  // 🔥 Show timing if Fall selected
+  $("input[name='sem']").change(function(){
+    if ($(this).val() === "Fall") {
+      $("#timingBox").show();
+    } else {
+      $("#timingBox").hide();
+    }
+  });
+
+  // 🔥 Submit
+  $("#submitBtn").click(function(){
+
+    let name = $("#name").val().trim();
+    let sem = $("input[name='sem']:checked").val();
+    let timing = $("#timing").val();
+    let total = $("#total").text();
+
+    let result = "";
+    let valid = true;
+
+    $(".error").text("");
+
+    // Name validation
+    if (name === "") {
+      result += "Name is required<br>";
+      valid = false;
+    }
+
+    // Course validation
+    if ($(".course:checked").length === 0) {
+      result += "Select at least one course<br>";
+      valid = false;
+    }
+
+    // Semester validation
+    if (!sem) {
+      result += "Select a semester<br>";
+      valid = false;
+    }
+
+    // Timing validation (only Fall)
+    if (sem === "Fall" && timing === "") {
+      result += "Select class timing for Fall<br>";
+      valid = false;
+    }
+
+    // ❌ Show errors
+    if (!valid) {
+      $("#response").html("<span style='color:red'>" + result + "</span>");
+      return;
+    }
+
+    // ✅ Success message
+    result = "<h3>Registration Successful ✅</h3>" +
+             "Name: " + name + "<br>" +
+             "Semester: " + sem + "<br>" +
+             "Total Credits: " + total + "<br>";
+
+    if (sem === "Fall") {
+      result += "Timing: " + timing;
+    }
+
+    $("#response").html(result);
+
+    // 🔥 AJAX (simulation)
+    $.ajax({
+      url: "/register",
+      method: "POST",
+      data: {
+        name: name,
+        semester: sem,
+        credits: total,
+        timing: timing
+      },
+      success: function(){
+        console.log("Data sent successfully");
+      },
+      error: function(){
+        console.log("No backend - simulation only");
+      }
+    });
+
+  });
+
+  // 🔥 Reset button
+  $("#resetBtn").click(function(){
+    $("input[type='text']").val("");
+    $("input[type='checkbox']").prop("checked", false);
+    $("input[type='radio']").prop("checked", false);
+    $("#timing").val("");
+    $("#timingBox").hide();
+    $("#total").text("0");
+    $("#response").html("");
+    $(".error").text("");
+  });
+
+});
+</script>
+
+</body>
+</html>

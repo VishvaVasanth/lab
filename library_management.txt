@@ -1,0 +1,189 @@
+LIBRARY MANAGEMENT SYSTEM (RAILS)
+
+-----------------------------------------
+STEP 1: CREATE PROJECT
+-----------------------------------------
+rails new library_app
+cd library_app
+
+-----------------------------------------
+STEP 2: CREATE MODELS
+-----------------------------------------
+rails generate model Book title:string author:string available:boolean
+rails generate model Borrower name:string email:string
+rails generate model Borrowing book:references borrower:references
+
+rails db:migrate
+
+-----------------------------------------
+STEP 3: CREATE CONTROLLERS
+-----------------------------------------
+rails generate controller Books
+rails generate controller Borrowers
+rails generate controller Borrowings
+
+-----------------------------------------
+STEP 4: BOOKS CONTROLLER
+(File: app/controllers/books_controller.rb)
+-----------------------------------------
+
+class BooksController < ApplicationController
+
+  def index
+    @books = Book.all
+  end
+
+  def new
+    @book = Book.new
+  end
+
+  def create
+    @book = Book.new(params.require(:book).permit(:title, :author, :available))
+    @book.save
+    redirect_to books_path
+  end
+
+  def edit
+    @book = Book.find(params[:id])
+  end
+
+  def update
+    @book = Book.find(params[:id])
+    @book.update(params.require(:book).permit(:title, :author, :available))
+    redirect_to books_path
+  end
+
+  def destroy
+    @book = Book.find(params[:id])
+    @book.destroy
+    redirect_to books_path
+  end
+
+end
+
+-----------------------------------------
+STEP 5: BORROWERS CONTROLLER
+(File: app/controllers/borrowers_controller.rb)
+-----------------------------------------
+
+class BorrowersController < ApplicationController
+
+  def index
+    @borrowers = Borrower.all
+  end
+
+  def new
+    @borrower = Borrower.new
+  end
+
+  def create
+    @borrower = Borrower.new(params.require(:borrower).permit(:name, :email))
+    @borrower.save
+    redirect_to borrowers_path
+  end
+
+  def edit
+    @borrower = Borrower.find(params[:id])
+  end
+
+  def update
+    @borrower = Borrower.find(params[:id])
+    @borrower.update(params.require(:borrower).permit(:name, :email))
+    redirect_to borrowers_path
+  end
+
+  def destroy
+    @borrower = Borrower.find(params[:id])
+    @borrower.destroy
+    redirect_to borrowers_path
+  end
+
+end
+
+-----------------------------------------
+STEP 6: BORROWINGS CONTROLLER
+(File: app/controllers/borrowings_controller.rb)
+-----------------------------------------
+
+class BorrowingsController < ApplicationController
+
+  def create
+    borrowing = Borrowing.new(
+      book_id: params[:book_id],
+      borrower_id: params[:borrower_id]
+    )
+
+    book = Book.find(params[:book_id])
+
+    if book.available
+      borrowing.save
+      book.update(available: false)
+      redirect_to books_path
+    else
+      render plain: "Book not available"
+    end
+  end
+
+end
+
+-----------------------------------------
+STEP 7: MODELS RELATIONSHIP
+-----------------------------------------
+
+# app/models/book.rb
+class Book < ApplicationRecord
+  has_many :borrowings
+end
+
+# app/models/borrower.rb
+class Borrower < ApplicationRecord
+  has_many :borrowings
+end
+
+# app/models/borrowing.rb
+class Borrowing < ApplicationRecord
+  belongs_to :book
+  belongs_to :borrower
+end
+
+-----------------------------------------
+STEP 8: ROUTES
+(File: config/routes.rb)
+-----------------------------------------
+
+Rails.application.routes.draw do
+  resources :books
+  resources :borrowers
+  resources :borrowings
+  root "books#index"
+end
+
+-----------------------------------------
+STEP 9: RUN SERVER
+-----------------------------------------
+rails server
+
+-----------------------------------------
+FUNCTIONALITY
+-----------------------------------------
+- Add Book (Create)
+- View Books (Read)
+- Edit Book (Update)
+- Delete Book (Delete)
+
+- Add Borrower (Create)
+- Edit Borrower (Update)
+- Delete Borrower (Delete)
+
+- Borrow Book:
+  * Checks availability
+  * Marks book as unavailable
+
+- View all available books
+
+-----------------------------------------
+VIVA ANSWER
+-----------------------------------------
+This system manages books and borrowers using CRUD operations.
+A borrowing model links books and borrowers.
+Users can view available books and borrow them, which updates availability.

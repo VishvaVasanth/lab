@@ -1,0 +1,136 @@
+COLLEGE ADMINISTRATION SYSTEM (RAILS API)
+
+-----------------------------------------
+STEP 1: CREATE PROJECT
+-----------------------------------------
+rails new college_api --api
+cd college_api
+
+-----------------------------------------
+STEP 2: CREATE MODEL
+-----------------------------------------
+rails generate model Student name:string email:string department:string age:integer
+rails db:migrate
+
+-----------------------------------------
+STEP 3: CREATE CONTROLLER
+-----------------------------------------
+rails generate controller Students
+
+-----------------------------------------
+STEP 4: ADD CONTROLLER CODE
+(File: app/controllers/students_controller.rb)
+-----------------------------------------
+
+class StudentsController < ApplicationController
+
+  # GET /students
+  def index
+    if params[:department]
+      students = Student.where(department: params[:department])
+    else
+      students = Student.all
+    end
+    render json: students
+  end
+
+  # GET /students/:id
+  def show
+    student = Student.find_by(id: params[:id])
+    if student
+      render json: student
+    else
+      render json: { error: "Student not found" }, status: 404
+    end
+  end
+
+  # POST /students
+  def create
+    student = Student.new(params.permit(:name, :email, :department, :age))
+
+    if student.name.blank? || student.department.blank?
+      render json: { error: "Name and Department required" }, status: 400
+      return
+    end
+
+    unless student.email =~ URI::MailTo::EMAIL_REGEXP
+      render json: { error: "Invalid email" }, status: 400
+      return
+    end
+
+    student.save
+    render json: student, status: 201
+  end
+
+  # PATCH /students/:id
+  def update
+    student = Student.find_by(id: params[:id])
+
+    if student.nil?
+      render json: { error: "Student not found" }, status: 404
+      return
+    end
+
+    student.update(params.permit(:name, :email, :department, :age))
+    render json: student
+  end
+
+  # DELETE /students/:id
+  def destroy
+    student = Student.find_by(id: params[:id])
+
+    if student.nil?
+      render json: { error: "Student not found" }, status: 404
+      return
+    end
+
+    student.destroy
+    render json: { message: "Deleted successfully" }
+  end
+
+end
+
+-----------------------------------------
+STEP 5: ADD ROUTES
+(File: config/routes.rb)
+-----------------------------------------
+
+Rails.application.routes.draw do
+  resources :students
+end
+
+-----------------------------------------
+STEP 6: RUN SERVER
+-----------------------------------------
+rails server
+
+-----------------------------------------
+STEP 7: TEST USING CURL
+-----------------------------------------
+
+CREATE:
+curl -X POST http://localhost:3000/students \
+-H "Content-Type: application/json" \
+-d "{\"name\":\"John\",\"email\":\"john@gmail.com\",\"department\":\"CSE\",\"age\":20}"
+
+GET ALL:
+curl http://localhost:3000/students
+
+FILTER:
+curl http://localhost:3000/students?department=CSE
+
+UPDATE:
+curl -X PATCH http://localhost:3000/students/1 \
+-H "Content-Type: application/json" \
+-d "{\"name\":\"Updated\"}"
+
+DELETE:
+curl -X DELETE http://localhost:3000/students/1
+
+-----------------------------------------
+FEATURES IMPLEMENTED
+-----------------------------------------
+- CRUD operations (Create, Read, Update, Delete)
+- Email validation
+- Filtering using query parameter (department)
+- Error handling

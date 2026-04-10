@@ -1,0 +1,166 @@
+RAILS BLOG PLATFORM - COMPLETE GUIDE
+
+STEP 1: CREATE RAILS APP
+rails new blog_app
+cd blog_app
+
+STEP 2: GENERATE MODELS
+rails g model User name:string email:string password_digest:string
+rails g model Post title:string content:text user:references
+rails g model Comment content:text user:references post:references
+rails g model Category name:string
+rails g model PostCategory post:references category:references
+
+rails db:migrate
+
+STEP 3: MODEL RELATIONSHIPS
+
+app/models/user.rb
+class User < ApplicationRecord
+  has_many :posts
+  has_many :comments
+end
+
+app/models/post.rb
+class Post < ApplicationRecord
+  belongs_to :user
+  has_many :comments
+  has_many :post_categories
+  has_many :categories, through: :post_categories
+  has_rich_text :content
+end
+
+app/models/comment.rb
+class Comment < ApplicationRecord
+  belongs_to :user
+  belongs_to :post
+end
+
+app/models/category.rb
+class Category < ApplicationRecord
+  has_many :post_categories
+  has_many :posts, through: :post_categories
+end
+
+app/models/post_category.rb
+class PostCategory < ApplicationRecord
+  belongs_to :post
+  belongs_to :category
+end
+
+STEP 4: INSTALL RICH TEXT EDITOR
+rails action_text:install
+rails db:migrate
+
+STEP 5: GENERATE CONTROLLERS
+rails g controller Users
+rails g controller Posts
+rails g controller Comments
+
+POSTS CONTROLLER (app/controllers/posts_controller.rb)
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def show
+    @post = Post.find(params[:id])
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new(post_params)
+    if @post.save
+      redirect_to @post
+    else
+      render :new
+    end
+  end
+
+  private
+
+  def post_params
+    params.require(:post).permit(:title, :content, :user_id)
+  end
+end
+
+COMMENTS CONTROLLER (app/controllers/comments_controller.rb)
+class CommentsController < ApplicationController
+  def create
+    @comment = Comment.new(comment_params)
+    if @comment.save
+      redirect_to post_path(@comment.post_id)
+    else
+      render :new
+    end
+  end
+
+  private
+
+  def comment_params
+    params.require(:comment).permit(:content, :user_id, :post_id)
+  end
+end
+
+STEP 6: ROUTES (config/routes.rb)
+Rails.application.routes.draw do
+  resources :users
+  resources :posts do
+    resources :comments
+  end
+  root "posts#index"
+end
+
+STEP 7: VIEWS
+
+app/views/posts/index.html.erb
+<h1>All Posts</h1>
+<% @posts.each do |post| %>
+  <h2><%= link_to post.title, post %></h2>
+<% end %>
+<%= link_to "New Post", new_post_path %>
+
+app/views/posts/new.html.erb
+<h1>Create Post</h1>
+<%= form_with model: @post do |f| %>
+  <%= f.label :title %><br>
+  <%= f.text_field :title %><br><br>
+  <%= f.label :content %><br>
+  <%= f.rich_text_area :content %><br><br>
+  <%= f.label :user_id %><br>
+  <%= f.number_field :user_id %><br><br>
+  <%= f.submit %>
+<% end %>
+
+app/views/posts/show.html.erb
+<h1><%= @post.title %></h1>
+<p><%= @post.content %></p>
+
+<h3>Comments</h3>
+<% @post.comments.each do |c| %>
+  <p><%= c.content %></p>
+<% end %>
+
+<h4>Add Comment</h4>
+<%= form_with model: [@post, Comment.new] do |f| %>
+  <%= f.text_area :content %><br>
+  <%= f.hidden_field :user_id, value: 1 %>
+  <%= f.hidden_field :post_id, value: @post.id %>
+  <%= f.submit "Add Comment" %>
+<% end %>
+
+STEP 8: RUN SERVER
+rails s
+
+Open browser:
+http://localhost:3000
+
+FEATURES INCLUDED:
+- User model
+- Create and publish posts
+- Rich text editing using ActionText
+- Categories (tags)
+- Comments system

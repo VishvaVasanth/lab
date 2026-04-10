@@ -1,0 +1,199 @@
+RECIPE MANAGEMENT SYSTEM (RAILS MVC)
+
+-----------------------------------------
+STEP 1: CREATE PROJECT
+-----------------------------------------
+rails new recipe_app
+cd recipe_app
+
+-----------------------------------------
+STEP 2: GENERATE MODELS
+-----------------------------------------
+rails generate model User name:string email:string
+rails generate model Recipe title:string ingredients:text user:references
+rails generate model Comment title:string user:references recipe:references
+
+rails db:migrate
+
+-----------------------------------------
+STEP 3: DEFINE ASSOCIATIONS (MODELS)
+-----------------------------------------
+
+# app/models/user.rb
+class User < ApplicationRecord
+  has_many :recipes
+  has_many :comments
+end
+
+# app/models/recipe.rb
+class Recipe < ApplicationRecord
+  belongs_to :user
+  has_many :comments
+end
+
+# app/models/comment.rb
+class Comment < ApplicationRecord
+  belongs_to :user
+  belongs_to :recipe
+end
+
+-----------------------------------------
+STEP 4: GENERATE CONTROLLERS
+-----------------------------------------
+rails generate controller Users
+rails generate controller Recipes
+rails generate controller Comments
+
+-----------------------------------------
+STEP 5: USERS CONTROLLER (CRUD)
+-----------------------------------------
+class UsersController < ApplicationController
+
+  def index
+    @users = User.all
+  end
+
+  def new
+    @user = User.new
+  end
+
+  def create
+    @user = User.new(params.require(:user).permit(:name, :email))
+    @user.save
+    redirect_to users_path
+  end
+
+  def edit
+    @user = User.find(params[:id])
+  end
+
+  def update
+    @user = User.find(params[:id])
+    @user.update(params.require(:user).permit(:name, :email))
+    redirect_to users_path
+  end
+
+  def destroy
+    @user = User.find(params[:id])
+    @user.destroy
+    redirect_to users_path
+  end
+
+end
+
+-----------------------------------------
+STEP 6: RECIPES CONTROLLER (CRUD)
+-----------------------------------------
+class RecipesController < ApplicationController
+
+  def index
+    @recipes = Recipe.all
+  end
+
+  def show
+    @recipe = Recipe.find(params[:id])
+    @comments = @recipe.comments
+  end
+
+  def new
+    @recipe = Recipe.new
+  end
+
+  def create
+    @recipe = Recipe.new(params.require(:recipe).permit(:title, :ingredients, :user_id))
+    @recipe.save
+    redirect_to recipes_path
+  end
+
+  def edit
+    @recipe = Recipe.find(params[:id])
+  end
+
+  def update
+    @recipe = Recipe.find(params[:id])
+    @recipe.update(params.require(:recipe).permit(:title, :ingredients, :user_id))
+    redirect_to recipes_path
+  end
+
+  def destroy
+    @recipe = Recipe.find(params[:id])
+    @recipe.destroy
+    redirect_to recipes_path
+  end
+
+end
+
+-----------------------------------------
+STEP 7: COMMENTS CONTROLLER (CRUD)
+-----------------------------------------
+class CommentsController < ApplicationController
+
+  def create
+    comment = Comment.new(params.require(:comment).permit(:title, :user_id, :recipe_id))
+    comment.save
+    redirect_to recipe_path(comment.recipe_id)
+  end
+
+  def destroy
+    comment = Comment.find(params[:id])
+    recipe_id = comment.recipe_id
+    comment.destroy
+    redirect_to recipe_path(recipe_id)
+  end
+
+end
+
+-----------------------------------------
+STEP 8: ROUTES
+-----------------------------------------
+Rails.application.routes.draw do
+  resources :users
+  resources :recipes
+  resources :comments
+  root "recipes#index"
+end
+
+-----------------------------------------
+STEP 9: VIEWS (IMPORTANT PART)
+-----------------------------------------
+
+# app/views/recipes/show.html.erb
+
+<h2><%= @recipe.title %></h2>
+<p><%= @recipe.ingredients %></p>
+
+<h3>Comments</h3>
+
+<% @comments.each do |comment| %>
+  <p>
+    <strong><%= comment.user.name %>:</strong>
+    <%= comment.title %>
+  </p>
+<% end %>
+
+-----------------------------------------
+FUNCTIONALITY
+-----------------------------------------
+- User can create recipes
+- User can comment on recipes
+- Each recipe shows its comments
+- Each comment shows user who posted it
+- Full CRUD for Users, Recipes, Comments
+
+-----------------------------------------
+ASSOCIATION SUMMARY
+-----------------------------------------
+User → has many Recipes
+User → has many Comments
+Recipe → belongs to User
+Recipe → has many Comments
+Comment → belongs to User
+Comment → belongs to Recipe
+
+-----------------------------------------
+VIVA ANSWER
+-----------------------------------------
+This application follows MVC architecture.
+Models define relationships between User, Recipe, and Comment.
+Controllers handle CRUD operations.
+Views display recipes along with comments and user details.

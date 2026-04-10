@@ -1,0 +1,12 @@
+<%= form_with(model: [@project, task]) do |f| %>
+  <%= f.label :title %>
+  <%= f.text_field :title %>
+
+  <%= f.label :description %>
+  <%= f.text_area :description %>
+
+  <%= f.label :status %>
+  <%= f.select :status, Task::STATUSES %>
+
+  <%= f.submit %>
+<% end %>

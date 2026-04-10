@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FAQ Section</title>
+
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 30px;
+    }
+
+    .faq-box {
+      width: 500px;
+    }
+
+    .question {
+      background: #007BFF;
+      color: white;
+      padding: 10px;
+      cursor: pointer;
+      margin-top: 5px;
+      border-radius: 5px;
+    }
+
+    .answer {
+      display: none;
+      padding: 10px;
+      background: #f1f1f1;
+      border-left: 3px solid #007BFF;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="faq-box">
+
+  <div class="question">What is HTML?</div>
+  <div class="answer">HTML is used to structure web pages.</div>
+
+  <div class="question">What is CSS?</div>
+  <div class="answer">CSS is used to style web pages.</div>
+
+  <div class="question">What is JavaScript?</div>
+  <div class="answer">JavaScript adds interactivity to web pages.</div>
+
+  <div class="question">What is jQuery?</div>
+  <div class="answer">jQuery is a JS library that simplifies coding.</div>
+
+</div>
+
+<script>
+$(document).ready(function(){
+
+  $(".question").click(function(){
+
+    let answer = $(this).next();
+
+    // 🔥 Close all other answers
+    $(".answer").not(answer).slideUp();
+
+    // 🔥 Toggle clicked one
+    answer.slideToggle();
+
+  });
+
+});
+</script>
+
+</body>
+</html>

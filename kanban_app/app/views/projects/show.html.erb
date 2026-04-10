@@ -1,0 +1,24 @@
+<h1><%= @project.name %></h1>
+
+<div style="display:flex; gap:20px;">
+  <% Task::STATUSES.each do |status| %>
+    <div style="width:30%; border:1px solid #ccc; padding:10px;">
+      <h2><%= status.capitalize %></h2>
+
+      <% (@tasks[status] || []).each do |task| %>
+        <div style="background:#eee; margin:10px; padding:10px;">
+          <strong><%= task.title %></strong>
+          <p><%= task.description %></p>
+
+          <%= link_to "Edit", edit_project_task_path(@project, task) %>
+          <%= button_to "Delete", project_task_path(@project, task), method: :delete %>
+        </div>
+      <% end %>
+
+      <%= link_to "Add Task", new_project_task_path(@project, status: status) %>
+    </div>
+  <% end %>
+</div>
+
+<br>
+<%= link_to "Back", root_path %>

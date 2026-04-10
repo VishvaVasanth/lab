@@ -1,0 +1,170 @@
+COLLEGE ADMINISTRATION SYSTEM (RAILS REST API)
+
+-----------------------------------------
+STEP 1: CREATE API PROJECT
+-----------------------------------------
+rails new college_api --api
+cd college_api
+
+-----------------------------------------
+STEP 2: CREATE MODEL
+-----------------------------------------
+rails generate model Student name:string email:string course:string year_of_study:integer
+rails db:migrate
+
+-----------------------------------------
+STEP 3: ADD VALIDATIONS (MODEL)
+(File: app/models/student.rb)
+-----------------------------------------
+
+class Student < ApplicationRecord
+  validates :name, presence: true
+  validates :course, presence: true
+  validates :year_of_study, presence: true
+
+  validates :email, presence: true,
+    format: { with: URI::MailTo::EMAIL_REGEXP }
+
+  # Scope for filtering
+  scope :by_course, ->(course) { where(course: course) }
+end
+
+-----------------------------------------
+STEP 4: CREATE CONTROLLER
+-----------------------------------------
+rails generate controller Api::Students
+
+-----------------------------------------
+STEP 5: CONTROLLER CODE
+(File: app/controllers/api/students_controller.rb)
+-----------------------------------------
+
+module Api
+  class StudentsController < ApplicationController
+    before_action :set_student, only: [:show, :update, :destroy]
+
+    # GET /api/students
+    def index
+      students = Student.all
+      render json: students, status: 200
+    end
+
+    # GET /api/students/:id
+    def show
+      render json: @student, status: 200
+    end
+
+    # POST /api/students
+    def create
+      student = Student.new(student_params)
+
+      if student.save
+        render json: student, status: 201
+      else
+        render json: { errors: student.errors.full_messages }, status: 422
+      end
+    end
+
+    # PATCH/PUT /api/students/:id
+    def update
+      if @student.update(student_params)
+        render json: @student, status: 200
+      else
+        render json: { errors: @student.errors.full_messages }, status: 422
+      end
+    end
+
+    # DELETE /api/students/:id
+    def destroy
+      @student.destroy
+      render json: { message: "Deleted successfully" }, status: 200
+    end
+
+    # GET /api/students/search?course=ECE
+    def search
+      if params[:course]
+        students = Student.by_course(params[:course])
+        render json: students, status: 200
+      else
+        render json: { error: "Course parameter missing" }, status: 400
+      end
+    end
+
+    private
+
+    def set_student
+      @student = Student.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "Student not found" }, status: 404
+    end
+
+    def student_params
+      params.permit(:name, :email, :course, :year_of_study)
+    end
+  end
+end
+
+-----------------------------------------
+STEP 6: ROUTES
+(File: config/routes.rb)
+-----------------------------------------
+
+Rails.application.routes.draw do
+  namespace :api do
+    resources :students do
+      collection do
+        get :search
+      end
+    end
+  end
+end
+
+-----------------------------------------
+STEP 7: RUN SERVER
+-----------------------------------------
+rails server
+
+-----------------------------------------
+STEP 8: TEST USING CURL
+-----------------------------------------
+
+CREATE:
+curl -X POST http://localhost:3000/api/students \
+-H "Content-Type: application/json" \
+-d "{\"name\":\"John\",\"email\":\"john@gmail.com\",\"course\":\"ECE\",\"year_of_study\":2}"
+
+GET ALL:
+curl http://localhost:3000/api/students
+
+GET ONE:
+curl http://localhost:3000/api/students/1
+
+UPDATE:
+curl -X PATCH http://localhost:3000/api/students/1 \
+-H "Content-Type: application/json" \
+-d "{\"name\":\"Updated\"}"
+
+DELETE:
+curl -X DELETE http://localhost:3000/api/students/1
+
+SEARCH:
+curl http://localhost:3000/api/students/search?course=ECE
+
+-----------------------------------------
+FEATURES IMPLEMENTED
+-----------------------------------------
+- RESTful CRUD operations
+- Model validations (presence + email format)
+- API namespace (/api/students)
+- Search/filter using course
+- JSON responses
+- Proper HTTP status codes (200, 201, 422, 404)
+- Error handling (not found, invalid input)
+
+-----------------------------------------
+VIVA ANSWER
+-----------------------------------------
+This RESTful API manages student records using Rails.
+It supports CRUD operations, validates data using model validations,
+and provides a custom search endpoint to filter students by course.
+All responses are returned in JSON format with proper status codes.

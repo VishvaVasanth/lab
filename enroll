@@ -1,0 +1,140 @@
+RAILS STUDENT COURSE ENROLLMENT SYSTEM (FULL CRUD API)
+
+--------------------------------------
+STEP 1: ROUTES
+--------------------------------------
+config/routes.rb
+
+Rails.application.routes.draw do
+  resources :enrollments
+end
+
+--------------------------------------
+STEP 2: CONTROLLER (CRUD)
+--------------------------------------
+app/controllers/enrollments_controller.rb
+
+class EnrollmentsController < ApplicationController
+
+  # GET /enrollments
+  def index
+    render json: Enrollment.all
+  end
+
+  # GET /enrollments/:id
+  def show
+    enrollment = Enrollment.find(params[:id])
+    render json: enrollment
+  end
+
+  # POST /enrollments
+  def create
+    enrollment = Enrollment.new(enrollment_params)
+
+    if enrollment.save
+      render json: { message: "Enrollment successful", data: enrollment }, status: :created
+    else
+      render json: { message: "Enrollment failed", errors: enrollment.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  # PATCH /enrollments/:id
+  def update
+    enrollment = Enrollment.find(params[:id])
+
+    if enrollment.update(enrollment_params)
+      render json: { message: "Enrollment updated", data: enrollment }
+    else
+      render json: { message: "Update failed", errors: enrollment.errors.full_messages }
+    end
+  end
+
+  # DELETE /enrollments/:id
+  def destroy
+    enrollment = Enrollment.find(params[:id])
+    enrollment.destroy
+
+    render json: { message: "Enrollment deleted successfully" }
+  end
+
+  private
+
+  def enrollment_params
+    params.require(:enrollment).permit(:student_id, :course_id)
+  end
+
+end
+
+--------------------------------------
+STEP 3: MODEL VALIDATION
+--------------------------------------
+app/models/enrollment.rb
+
+class Enrollment < ApplicationRecord
+  belongs_to :student
+  belongs_to :course
+
+  validates :student_id, uniqueness: { scope: :course_id }
+end
+
+--------------------------------------
+STEP 4: RUN SERVER
+--------------------------------------
+rails s
+
+--------------------------------------
+STEP 5: TERMINAL TESTING (CURL)
+--------------------------------------
+
+CREATE (POST)
+curl -X POST http://localhost:3000/enrollments \
+-H "Content-Type: application/json" \
+-d '{"enrollment":{"student_id":1,"course_id":1}}'
+
+--------------------------------------
+
+READ ALL (GET)
+curl http://localhost:3000/enrollments
+
+--------------------------------------
+
+READ ONE (GET)
+curl http://localhost:3000/enrollments/1
+
+--------------------------------------
+
+UPDATE (PATCH)
+curl -X PATCH http://localhost:3000/enrollments/1 \
+-H "Content-Type: application/json" \
+-d '{"enrollment":{"course_id":2}}'
+
+--------------------------------------
+
+DELETE
+curl -X DELETE http://localhost:3000/enrollments/1
+
+--------------------------------------
+
+EXPECTED OUTPUTS
+
+POST SUCCESS:
+{"message":"Enrollment successful","data":{...}}
+
+POST FAIL (duplicate):
+{"message":"Enrollment failed","errors":["Student has already been taken"]}
+
+PATCH:
+{"message":"Enrollment updated","data":{...}}
+
+DELETE:
+{"message":"Enrollment deleted successfully"}
+
+--------------------------------------
+
+FEATURES
+--------------------------------------
+- Full RESTful CRUD API
+- POST, GET, PATCH, DELETE supported
+- Prevent duplicate enrollment
+- JSON responses
+- Tested using terminal (curl)

@@ -1,0 +1,15 @@
+<h1>Projects</h1>
+
+<%= link_to "New Project", new_project_path %>
+
+<ul>
+  <% @projects.each do |project| %>
+    <li>
+      <strong><%= project.name %></strong>
+
+      <%= link_to "Open", project_path(project) %>
+
+      <%= button_to "Delete", project_path(project), method: :delete %>
+    </li>
+  <% end %>
+</ul>

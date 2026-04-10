@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food ordering</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+</head>
+<body>
+    <h2>Food ordering system</h2>
+    
+    <label>Enter the name</label>
+    <input type="text" id="name" required><br><br>
+    <label>Enter the item</label>
+    <input type="checkbox" name=food class="item" id="food" value="100">shake 100 <br>
+    <input type="checkbox" name=food class="item" id="food" value="250">pizza 250 <br>
+    total= $ <span id="total">0</span><br>
+    <label>Order Type:</label><br>
+    <input type="radio" name="type" class="order" value="pickup"> Pickup <br>
+    <input type="radio" name="type" class="order" value="delivery"> Delivery <br>
+    Address<textarea name="add" id="addr"></textarea><br>
+    <button id="submit">Place Order</button>
+
+  <br><br>
+
+  <div id="response"></div>
+  <script>
+    $(document).ready(function(){
+        $(".item").change(function(){
+            let total=0;
+            $(".item:checked").each(function(){
+                total+=parseInt($(this).val());
+
+            });
+            $("#total").text(total);
+
+        });
+        $(".order").change(function(){
+            if($(this).val()=="delivery"){
+                $("#addr").show();
+            }
+            else{
+                $("#addr").hide();
+            }
+
+        });
+        $("#submit").click(function(){
+            let name=$("#name").val();
+            let total=$("#total").text();
+            let address=$("#addr").val();
+            let type=$("input[name='type']:checked").val();
+            let food=$("input[name=food]:checked").val();
+            if(name==""){
+                alert("enter name field");
+            }
+            if(address==""){
+                alert("enter address for delivery");
+            }
+            if(!type){
+                alert("select order type");
+            }
+            let result =
+                "<h3>Order confirmed</h3>"+
+                "Name:"+name+"<br>"+
+                "Total: ₹" +total+ "<br>"+
+                "Type:" +type+ "<br>"+
+                "Food:"+food+"<br>";
+
+            if(type=="delivery"){
+                result+="Address:"+address;
+            }
+            $("#response").html(result);
+                
+        
+
+        });
+        
+
+    });
+  </script>
+  
+
+
+</body>
+</html>

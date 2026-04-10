@@ -1,0 +1,12 @@
+class CreateBooks < ActiveRecord::Migration[8.1]
+  def change
+    create_table :books do |t|
+      t.string :title
+      t.string :director
+      t.date :releaseyear
+      t.string :genre
+
+      t.timestamps
+    end
+  end
+end
