@@ -1,0 +1,52 @@
+UNIT CONVERTER RAILS API (END TO END)
+
+STEP 1: CREATE PROJECT rails new unit_converter –api cd unit_converter
+rails server
+
+STEP 2: GENERATE CONTROLLER rails generate controller converter
+
+STEP 3: ROUTES (config/routes.rb) Rails.application.routes.draw do get
+‘convert’, to: ‘converter#convert’ end
+
+STEP 4: CONTROLLER (app/controllers/converter_controller.rb) class
+ConverterController < ApplicationController
+
+def convert value = params[:value].to_f from = params[:from] to =
+params[:to]
+
+    result = case [from, to]
+
+             when ["m", "km"]
+               value / 1000
+
+             when ["km", "m"]
+               value * 1000
+
+             when ["g", "kg"]
+               value / 1000
+
+             when ["kg", "g"]
+               value * 1000
+
+             else
+               return render json: { error: "Invalid conversion" }, status: 400
+             end
+
+    render json: {
+      input: value,
+      from: from,
+      to: to,
+      result: result
+    }
+
+end end
+
+STEP 5: TEST URLS
+
+Meter to Kilometer:
+http://localhost:3000/convert?value=1000&from=m&to=km
+
+Gram to Kilogram: http://localhost:3000/convert?value=5000&from=g&to=kg
+
+SAMPLE OUTPUT: { “input”: 1000.0, “from”: “m”, “to”: “km”, “result”: 1.0
+}
